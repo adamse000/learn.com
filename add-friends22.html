@@ -95,7 +95,7 @@
             position: relative;
         }
 
-        .search-box input, .search-box select {
+        .search-box input {
             flex-grow: 1;
             padding: 12px 20px;
             border-radius: 50px;
@@ -106,7 +106,7 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
-        .search-box input:focus, .search-box select:focus {
+        .search-box input:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 2px 15px rgba(88, 188, 130, 0.2);
@@ -131,25 +131,6 @@
         .search-box button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(88, 188, 130, 0.4);
-        }
-
-        .search-filters {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            flex-grow: 1;
-            min-width: 120px;
-        }
-
-        .filter-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #555;
         }
 
         .results {
@@ -194,21 +175,10 @@
             color: var(--dark);
         }
 
-        .user-details {
+        .user-role {
             font-size: 12px;
             color: #666;
             margin-top: 3px;
-        }
-
-        .user-location {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 3px;
-        }
-
-        .user-location i {
-            color: var(--primary);
         }
 
         .result-actions {
@@ -491,11 +461,6 @@
                 flex-direction: column;
                 text-align: center;
             }
-
-            .search-filters {
-                flex-direction: column;
-                gap: 10px;
-            }
         }
     </style>
 </head>
@@ -505,48 +470,19 @@
             <i class="fas fa-arrow-left"></i> Back to Home
         </a><br><br><br><br>
         
-        <h2>Connect with Friends Worldwide</h2>
-        
-        <div class="search-filters">
-            <div class="filter-group">
-                <label for="searchInput">Search by name or email</label>
-                <input type="text" id="searchInput" placeholder="Username or email...">
-            </div>
-            <div class="filter-group">
-                <label for="countryFilter">Country</label>
-                <select id="countryFilter">
-                    <option value="">Any country</option>
-                    <option value="US">United States</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="CA">Canada</option>
-                    <option value="AU">Australia</option>
-                    <option value="IN">India</option>
-                    <option value="JP">Japan</option>
-                    <option value="BR">Brazil</option>
-                    <option value="FR">France</option>
-                    <option value="DE">Germany</option>
-                    <option value="IT">Italy</option>
-                    <option value="ES">Spain</option>
-                    <option value="MX">Mexico</option>
-                    <option value="RU">Russia</option>
-                    <option value="CN">China</option>
-                    <option value="ZA">South Africa</option>
-                    <!-- Add more countries as needed -->
-                </select>
-            </div>
-        </div>
+        <h2>Connect with Friends</h2>
         
         <div class="search-box">
-            <input type="text" id="cityFilter" placeholder="Filter by city (optional)...">
+            <input type="text" id="searchInput" placeholder="Search by username or email...">
             <button onclick="searchAccounts()">
-                <i class="fas fa-search"></i> Search Worldwide
+                <i class="fas fa-search"></i> Search
             </button>
         </div>
         
         <div class="results" id="resultsContainer">
             <div class="no-results">
-                <i class="fas fa-globe"></i>
-                <p>Search for friends from around the world</p>
+                <i class="fas fa-user-friends"></i>
+                <p>Search for friends to connect with</p>
             </div>
         </div>
     </div>
@@ -560,7 +496,6 @@
                 <div class="profile-info">
                     <h2 id="modalProfileName">John Doe</h2>
                     <p id="modalProfileRole">Role: Student</p>
-                    <p id="modalProfileLocation"><i class="fas fa-map-marker-alt"></i> <span id="modalLocationText">Unknown location</span></p>
                 </div>
             </div>
 
@@ -589,37 +524,36 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script>
-        // Firebase configuration - REPLACE WITH YOUR ACTUAL VALUES
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJp61Atmb13xntYBNvgQ8CpDUJp9Q2dDI",
-            authDomain: "learn777-29a71.firebaseapp.com",
-            databaseURL: "https://learn777-29a71-default-rtdb.firebaseio.com",
-            projectId: "learn777-29a71",
-            storageBucket: "learn777-29a71.appspot.com",
-            messagingSenderId: "230772561489",
-            appId: "1:230772561489:web:f2f133edb60f7d6cb3ca70",
-            measurementId: "G-EL64E6WP3B"
-        };
+      
+       // Firebase configuration - REPLACE WITH YOUR ACTUAL VALUES
+    const firebaseConfig = {
+        apiKey: "AIzaSyCJp61Atmb13xntYBNvgQ8CpDUJp9Q2dDI",
+        authDomain: "learn777-29a71.firebaseapp.com",
+        databaseURL: "https://learn777-29a71-default-rtdb.firebaseio.com",
+        projectId: "learn777-29a71",
+        storageBucket: "learn777-29a71.appspot.com",
+        messagingSenderId: "230772561489",
+        appId: "1:230772561489:web:f2f133edb60f7d6cb3ca70",
+        measurementId: "G-EL64E6WP3B"
+    };
 
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const database = firebase.database();
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const database = firebase.database();
 
-        // Search Firebase accounts globally with location filters
+        // Search Firebase accounts globally
         function searchAccounts() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const countryFilter = document.getElementById('countryFilter').value;
-            const cityFilter = document.getElementById('cityFilter').value.toLowerCase();
             const resultsContainer = document.getElementById('resultsContainer');
             resultsContainer.innerHTML = '';
 
-            if (searchInput.trim() === '' && countryFilter === '' && cityFilter === '') {
+            if (searchInput.trim() === '') {
                 resultsContainer.innerHTML = `
                     <div class="no-results">
                         <i class="fas fa-search"></i>
-                        <p>Enter search criteria to find friends</p>
+                        <p>Enter a name or email to search</p>
                     </div>
                 `;
                 return;
@@ -632,54 +566,23 @@
 
                 for (const userId in users) {
                     const user = users[userId];
-                    if (!user) continue;
-                    
-                    // Skip the logged in user
-                    if (userId === loggedInUser) continue;
-                    
-                    // Check if user matches search criteria
-                    const matchesSearch = searchInput === '' || 
-                                         (user.username && user.username.toLowerCase().includes(searchInput)) || 
-                                         (user.email && user.email.toLowerCase().includes(searchInput));
-                    
-                    // Check if user matches country filter
-                    const matchesCountry = countryFilter === '' || 
-                                          (user.country && user.country === countryFilter);
-                    
-                    // Check if user matches city filter
-                    const matchesCity = cityFilter === '' || 
-                                       (user.city && user.city.toLowerCase().includes(cityFilter));
-                    
-                    if (matchesSearch && matchesCountry && matchesCity) {
+                    if (
+                        userId !== loggedInUser &&
+                        (user.username.toLowerCase().includes(searchInput) || 
+                        user.email.toLowerCase().includes(searchInput))
+                    ) {
                         foundResults = true;
                         const isFriend = user.friends && user.friends.includes(loggedInUser);
 
                         const resultItem = document.createElement('div');
                         resultItem.className = 'result-item fade-in';
-                        
-                        // Format location information
-                        let locationInfo = '';
-                        if (user.city && user.country) {
-                            locationInfo = `${user.city}, ${getCountryName(user.country)}`;
-                        } else if (user.country) {
-                            locationInfo = getCountryName(user.country);
-                        } else if (user.city) {
-                            locationInfo = user.city;
-                        }
-                        
                         resultItem.innerHTML = `
                             <div class="user-info">
                                 <img src="${user.profilePic || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" 
                                      alt="${user.username}" class="user-avatar">
                                 <div>
-                                    <div class="user-name">${user.username || 'Unknown user'}</div>
-                                    <div class="user-details">${user.role || 'Student'}</div>
-                                    ${locationInfo ? `
-                                    <div class="user-location">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>${locationInfo}</span>
-                                    </div>
-                                    ` : ''}
+                                    <div class="user-name">${user.username}</div>
+                                    <div class="user-role">${user.role || 'Student'}</div>
                                 </div>
                             </div>
                             <div class="result-actions">
@@ -699,33 +602,11 @@
                     resultsContainer.innerHTML = `
                         <div class="no-results">
                             <i class="fas fa-user-slash"></i>
-                            <p>No matching accounts found. Try different search criteria.</p>
+                            <p>No matching accounts found</p>
                         </div>
                     `;
                 }
             });
-        }
-
-        // Helper function to get country name from code
-        function getCountryName(code) {
-            const countries = {
-                'US': 'United States',
-                'GB': 'United Kingdom',
-                'CA': 'Canada',
-                'AU': 'Australia',
-                'IN': 'India',
-                'JP': 'Japan',
-                'BR': 'Brazil',
-                'FR': 'France',
-                'DE': 'Germany',
-                'IT': 'Italy',
-                'ES': 'Spain',
-                'MX': 'Mexico',
-                'RU': 'Russia',
-                'CN': 'China',
-                'ZA': 'South Africa'
-            };
-            return countries[code] || code;
         }
 
         // Add friend
@@ -764,22 +645,8 @@
                 const user = snapshot.val();
                 if (user) {
                     document.getElementById('modalProfilePic').src = user.profilePic || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png";
-                    document.getElementById('modalProfileName').textContent = user.username || "Unknown user";
+                    document.getElementById('modalProfileName').textContent = user.username;
                     document.getElementById('modalProfileRole').textContent = `Role: ${user.role || "Student"}`;
-                    
-                    // Display location in modal
-                    let locationText = '';
-                    if (user.city && user.country) {
-                        locationText = `${user.city}, ${getCountryName(user.country)}`;
-                    } else if (user.country) {
-                        locationText = getCountryName(user.country);
-                    } else if (user.city) {
-                        locationText = user.city;
-                    } else {
-                        locationText = 'Unknown location';
-                    }
-                    document.getElementById('modalLocationText').textContent = locationText;
-                    
                     document.getElementById('modalFriendsCount').textContent = user.friends ? user.friends.length : 0;
                     document.getElementById('modalCoursesCount').textContent = user.courses ? user.courses.length : 0;
                     document.getElementById('modalJoinDate').textContent = user.joinDate || "Today";
@@ -817,12 +684,6 @@
 
         // Allow searching by pressing Enter key
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchAccounts();
-            }
-        });
-
-        document.getElementById('cityFilter').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 searchAccounts();
             }
