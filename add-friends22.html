@@ -521,12 +521,34 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJp61Atmb13xntYBNvgQ8CpDUJp9Q2dDI",
+            authDomain: "learn777-29a71.firebaseapp.com",
+            databaseURL: "https://learn777-29a71-default-rtdb.firebaseio.com",
+            projectId: "learn777-29a71",
+            storageBucket: "learn777-29a71.appspot.com",
+            messagingSenderId: "230772561489",
+            appId: "1:230772561489:web:f2f133edb60f7d6cb3ca70",
+            measurementId: "G-EL64E6WP3B"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        // Search Firebase accounts
         function searchAccounts() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
             const resultsContainer = document.getElementById('resultsContainer');
             resultsContainer.innerHTML = '';
-            
+
             if (searchInput.trim() === '') {
                 resultsContainer.innerHTML = `
                     <div class="no-results">
@@ -537,98 +559,110 @@
                 return;
             }
 
-            const users = JSON.parse(localStorage.getItem('users')) || {};
-            const loggedInUser = localStorage.getItem('loggedInUser');
-            let foundResults = false;
+            database.ref('users').once('value', (snapshot) => {
+                const users = snapshot.val();
+                const loggedInUser = localStorage.getItem('loggedInUser');
+                let foundResults = false;
 
-            Object.keys(users).forEach(username => {
-                if (
-                    username !== loggedInUser && 
-                    (username.toLowerCase().includes(searchInput) || 
-                    (users[username].email && users[username].email.toLowerCase().includes(searchInput)))
-                ) {
-                    foundResults = true;
-                    const user = users[username];
-                    const isFriend = users[loggedInUser]?.friends?.includes(username);
-                    
-                    const resultItem = document.createElement('div');
-                    resultItem.className = 'result-item fade-in';
-                    resultItem.innerHTML = `
-                        <div class="user-info">
-                            <img src="${user.profilePic || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" 
-                                 alt="${username}" class="user-avatar">
-                            <div>
-                                <div class="user-name">${username}</div>
-                                <div class="user-role">${user.role || 'Student'}</div>
+                for (const userId in users) {
+                    const user = users[userId];
+                    if (
+                        userId !== loggedInUser &&
+                        (user.username.toLowerCase().includes(searchInput) || 
+                        user.email.toLowerCase().includes(searchInput))
+                    ) {
+                        foundResults = true;
+                        const isFriend = user.friends && user.friends.includes(loggedInUser);
+
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'result-item fade-in';
+                        resultItem.innerHTML = `
+                            <div class="user-info">
+                                <img src="${user.profilePic || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" 
+                                     alt="${user.username}" class="user-avatar">
+                                <div>
+                                    <div class="user-name">${user.username}</div>
+                                    <div class="user-role">${user.role || 'Student'}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="result-actions">
-                            <button class="view-profile" onclick="viewProfile('${username}')">
-                                <i class="fas fa-user"></i> View Profile
-                            </button>
-                            <button onclick="addFriend('${username}', this)" ${isFriend ? 'class="added" disabled' : ''}>
-                                ${isFriend ? '<i class="fas fa-check"></i> Added' : '<i class="fas fa-user-plus"></i> Add Friend'}
-                            </button>
+                            <div class="result-actions">
+                                <button class="view-profile" onclick="viewProfile('${userId}')">
+                                    <i class="fas fa-user"></i> View Profile
+                                </button>
+                                <button onclick="addFriend('${userId}', this)" ${isFriend ? 'class="added" disabled' : ''}>
+                                    ${isFriend ? '<i class="fas fa-check"></i> Added' : '<i class="fas fa-user-plus"></i> Add Friend'}
+                                </button>
+                            </div>
+                        `;
+                        resultsContainer.appendChild(resultItem);
+                    }
+                }
+
+                if (!foundResults) {
+                    resultsContainer.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-user-slash"></i>
+                            <p>No matching accounts found</p>
                         </div>
                     `;
-                    resultsContainer.appendChild(resultItem);
                 }
             });
-
-            if (!foundResults) {
-                resultsContainer.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-user-slash"></i>
-                        <p>No matching accounts found</p>
-                    </div>
-                `;
-            }
         }
 
-        function addFriend(username, button) {
-            const users = JSON.parse(localStorage.getItem('users'));
+        // Add friend
+        function addFriend(userId, button) {
             const loggedInUser = localStorage.getItem('loggedInUser');
 
-            if (loggedInUser && users[loggedInUser]) {
-                const user = users[loggedInUser];
-                if (!user.friends) user.friends = [];
-                
-                if (!user.friends.includes(username)) {
-                    user.friends.push(username);
-                    localStorage.setItem('users', JSON.stringify(users));
-                    
+            database.ref(`users/${loggedInUser}/friends`).once('value', (snapshot) => {
+                const friends = snapshot.val() || [];
+                if (!friends.includes(userId)) {
+                    friends.push(userId);
+                    database.ref(`users/${loggedInUser}/friends`).set(friends);
+
+                    // Add the logged-in user to the friend's friend list
+                    database.ref(`users/${userId}/friends`).once('value', (snapshot) => {
+                        const friendFriends = snapshot.val() || [];
+                        if (!friendFriends.includes(loggedInUser)) {
+                            friendFriends.push(loggedInUser);
+                            database.ref(`users/${userId}/friends`).set(friendFriends);
+                        }
+                    });
+
                     // Update button appearance
                     button.innerHTML = '<i class="fas fa-check"></i> Added';
                     button.classList.add('added');
                     button.disabled = true;
-                    
+
                     // Show success message
-                    showToast(`${username} has been added to your friends!`);
+                    showToast(`${userId} has been added to your friends!`);
                 }
-            }
+            });
         }
 
-        function viewProfile(username) {
-            const users = JSON.parse(localStorage.getItem('users'));
-            const user = users[username];
-            
-            if (user) {
-                document.getElementById('modalProfilePic').src = user.profilePic || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png";
-                document.getElementById('modalProfileName').textContent = username;
-                document.getElementById('modalProfileRole').textContent = `Role: ${user.role || "Student"}`;
-                document.getElementById('modalFriendsCount').textContent = user.friends ? user.friends.length : 0;
-                document.getElementById('modalCoursesCount').textContent = user.courses ? user.courses.length : 0;
-                document.getElementById('modalJoinDate').textContent = user.joinDate || "Today";
-                document.getElementById('modalBioText').textContent = user.bio || "No bio available.";
-                
-                document.getElementById('profileModal').style.display = 'block';
-            }
+        // View profile
+        function viewProfile(userId) {
+            database.ref(`users/${userId}`).once('value', (snapshot) => {
+                const user = snapshot.val();
+                if (user) {
+                    document.getElementById('modalProfilePic').src = user.profilePic || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png";
+                    document.getElementById('modalProfileName').textContent = user.username;
+                    document.getElementById('modalProfileRole').textContent = `Role: ${user.role || "Student"}`;
+                    document.getElementById('modalFriendsCount').textContent = user.friends ? user.friends.length : 0;
+                    document.getElementById('modalCoursesCount').textContent = user.courses ? user.courses.length : 0;
+                    document.getElementById('modalJoinDate').textContent = user.joinDate || "Today";
+                    document.getElementById('modalBioText').textContent = user.bio || "No bio available.";
+
+                    document.getElementById('profileModal').style.display = 'block';
+                }
+            });
         }
 
+        // Close profile modal
         function closeProfileModal() {
             document.getElementById('profileModal').style.display = 'none';
         }
 
+        // Show toast message
         function showToast(message) {
             const toast = document.createElement('div');
             toast.style.position = 'fixed';
@@ -643,7 +677,7 @@
             toast.style.zIndex = '1000';
             toast.style.animation = 'fadeIn 0.3s, fadeOut 0.3s 2.7s forwards';
             toast.textContent = message;
-            
+
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
